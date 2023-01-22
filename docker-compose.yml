@@ -21,6 +21,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
       - ./docker/mysql/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./docker/mysql/custom.cnf:/etc/mysql/conf.d/custom.cnf
     networks:
       default:
         ipv4_address: ${COMPOSE_PROJECT_NETWORK}.3
