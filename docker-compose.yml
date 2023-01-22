@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  phpmyadmin:
+    container_name: phpmyadmin_${COMPOSE_PROJECT_NAME}
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST: mysql
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.2
+    depends_on:
+      - mysql
+  mysql:
+    container_name: mysql_${COMPOSE_PROJECT_NAME}
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: $DB_DATABASE
+      MYSQL_USER: $DB_USERNAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.3
+  php:
+    container_name: php_${COMPOSE_PROJECT_NAME}
+    build:
+      args:
+        user: $COMPOSE_USER_NAME
+        uid: $COMPOSE_USER_UID
+      context: ./
+      dockerfile: docker/php/Dockerfile
+    image: php_${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./:/app
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.4
+    depends_on:
+      - mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1024M
+        reservations:
+          cpus: '0.05'
+          memory: 512M
+
+  golang:
+    container_name: golang_${COMPOSE_PROJECT_NAME}
+    build:
+      args:
+        user: $COMPOSE_USER_NAME
+        uid: $COMPOSE_USER_UID
+      context: ./
+      dockerfile: docker/golang/Dockerfile
+    image: golang_${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./:/app
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.5
+    depends_on:
+      - mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 1024M
+        reservations:
+          cpus: '0.05'
+          memory: 512M
+
+volumes:
+  mysql:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${COMPOSE_PROJECT_NETWORK}.0/16

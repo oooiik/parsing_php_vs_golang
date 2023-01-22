@@ -1,0 +1,31 @@
+FROM golang:1.19
+
+# Arguments defined in docker-compose.yml
+ARG user
+ARG uid
+
+RUN apt-get update
+
+## Install system dependencies
+#RUN apt-get install -y libzip-dev \
+#    curl \
+#    libpng-dev \
+#    libonig-dev \
+#    libxml2-dev \
+#    zip \
+#    unzip
+
+## Clear cache
+#RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create system user to run Composer and Artisan Commands
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user && \
+    chown -R $user:$user /home/$user
+
+# Set working directory
+WORKDIR /app
+
+USER $user
+
+
