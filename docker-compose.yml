@@ -20,6 +20,7 @@ services:
       MYSQL_PASSWORD: $DB_PASSWORD
     volumes:
       - mysql:/var/lib/mysql
+      - ./docker/mysql/setup.sql:/docker-entrypoint-initdb.d/setup.sql
     networks:
       default:
         ipv4_address: ${COMPOSE_PROJECT_NETWORK}.3
