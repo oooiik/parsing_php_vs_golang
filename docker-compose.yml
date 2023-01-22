@@ -61,6 +61,7 @@ services:
     image: golang_${COMPOSE_PROJECT_NAME}
     volumes:
       - ./:/app
+      - golang_cache:/go
     networks:
       default:
         ipv4_address: ${COMPOSE_PROJECT_NETWORK}.5
@@ -77,6 +78,8 @@ services:
 
 volumes:
   mysql:
+    driver: local
+  golang_cache:
     driver: local
 
 networks:
