@@ -20,7 +20,7 @@ const table = "10e5-row"
 const filePath = "/app/resources/" + table + ".csv"
 
 func main() {
-	defer dbTruncate()
+	dbTruncate()
 
 	start := time.Now()
 	defer func() {
