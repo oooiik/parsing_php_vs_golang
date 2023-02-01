@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -22,6 +23,10 @@ var table string = "10e" + countNol() + "-row"
 
 var filePath string = "/app/resources/" + table + ".csv"
 
+const multiPer = 1000
+const per = 50
+const maxMulti = 4
+
 func countNol() string {
 	if len(os.Args) < 2 {
 		panic("input not found\n")
@@ -33,8 +38,8 @@ func main() {
 
 	dbTruncate()
 
-	fmt.Println("Start!!!")
-	defer fmt.Println("Finish!!!")
+	//fmt.Println("Start!!!")
+	//defer fmt.Println("Finish!!!")
 	start := time.Now()
 	defer func() {
 		duration := time.Since(start)
@@ -52,42 +57,60 @@ func main() {
 
 	parser := csv.NewReader(file)
 
-	multiPer := 100
-	per := 100
-
-	lineAll, err := parser.ReadAll()
+	_, err = parser.Read()
 	if err != nil {
 		panic(err.Error())
 	}
-	linesCount := len(lineAll)
 
+	var lines [][]string
 	var wg sync.WaitGroup
-	for i := 1; i < linesCount; i += multiPer * per {
-		wg.Add(1)
-		if i+multiPer*per < linesCount {
-			go multi(per, lineAll[i:i+multiPer*per], &wg)
-		} else {
-			go multi(per, lineAll[i:], &wg)
+	wgAdd := 0
+	i := 0
+	for {
+		line, err := parser.Read()
+		if err == io.EOF {
+			break
 		}
+		if err != nil {
+			panic(err.Error())
+		}
+		lines = append(lines, line)
+
+		if i%(per*multiPer) == 0 && i > 0 {
+			wg.Add(1)
+			wgAdd++
+			go multi(lines, &wg)
+			lines = [][]string{}
+		}
+		if wgAdd%maxMulti == 0 {
+			wg.Wait()
+		}
+		i++
+	}
+	if len(lines) > 0 {
+		wg.Add(1)
+		wgAdd++
+		go multi(lines, &wg)
+		lines = [][]string{}
 	}
 	wg.Wait()
 }
 
 var multiCount int = 0
 
-func multi(per int, lines [][]string, wg *sync.WaitGroup) {
+func multi(lines [][]string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	multiCount++
-	son := multiCount
-	fmt.Println(son, "- Start")
-	defer fmt.Println(son, "- Finish")
+	//son := multiCount
+	//fmt.Println(son, "- Start")
+	//defer fmt.Println(son, "- Finish")
 
 	// connect mysql
 	db := connectMysql()
 	defer db.Close()
 
-	for i := 1; i < len(lines); i += per {
+	for i := 0; i < len(lines); i += per {
 		if i+per < len(lines) {
 			dbInsert(db, lines[i:i+per])
 		} else {
