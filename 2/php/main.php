@@ -14,7 +14,7 @@ function main()
 
     $start = microtime(true);
 
-//    $conn = connectMysql(host, user, pass, database);
+    $conn = connectMysql(host, user, pass, database);
 
     $file = openFile(filePath);
 
@@ -25,14 +25,14 @@ function main()
             $row++;
             continue;
         }
-//        dbInsert($conn, table, $data);
+        dbInsert($conn, table, $data);
         $row++;
     }
 
 
     fclose($file);
 
-//    $conn = null;
+    $conn = null;
 
     $execution_time = (microtime(true) - $start) * 1000000;
     echo floor($execution_time) . " µs\n";
@@ -45,7 +45,11 @@ function connectMysql(string $host, string $user, string $pass, string $database
 
 function dbInsert(PDO $conn, $table, $value)
 {
-    $sql = "INSERT INTO `$table` (`uid`, `manufacturer_part_number`, `manufacturer`, `quantity`) VALUES ('$value[0]', '$value[2]', '$value[3]', '$value[4]')";
+    $sql = "INSERT INTO `$table` (`uid`, `manufacturer_part_number`, `manufacturer`, `quantity`) VALUES ('"
+        . htmlspecialchars($value[0]) . "', '"
+        . htmlspecialchars($value[2]) . "', '"
+        . htmlspecialchars($value[3]) . "', '"
+        . htmlspecialchars($value[4]) . "')";
 
     $conn->exec($sql);
 }

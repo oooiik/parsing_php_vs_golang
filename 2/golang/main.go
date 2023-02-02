@@ -30,8 +30,8 @@ func main() {
 	}()
 
 	// connect mysql
-	// 	db := connectMysql()
-	// 	defer db.Close()
+	db := connectMysql()
+	defer db.Close()
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	for {
-		_, err := parser.Read()
+		line, err := parser.Read()
 		if err == io.EOF {
 			break
 		}
@@ -54,7 +54,7 @@ func main() {
 			panic(err.Error())
 		}
 
-		// 		dbInsert(db, line)
+		dbInsert(db, line)
 	}
 }
 
